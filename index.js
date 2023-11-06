@@ -51,23 +51,20 @@ async function run() {
                 res.send(error.message);
             }
         });
-
         // GET ALL ASSIGNMENT IN DATABASE
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment 
-
         // GET ALL ASSIGNMENT BY DIFFICULTY LEVEL  IN DATABASE
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment?diffeculty= easy/medium/hard
         app.get('/newAssignment', async (req, res) => {
-            const quaryOBJ ={}
-            const queryPeremeter= req.query.difficulty;
-            if(queryPeremeter){
+            const quaryOBJ = {}
+            const queryPeremeter = req.query.difficulty;
+            if (queryPeremeter) {
                 quaryOBJ.difficulty = queryPeremeter
             }
             const findAllAssignment = allAssignmentCollection.find(quaryOBJ);
             const allAssignmentArray = await findAllAssignment.toArray();
             res.send(allAssignmentArray)
         })
-
         // GET A ASSIGNMENT IN DATABASE
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment/:id
         app.get('/newAssignment/:id', async (req, res) => {
@@ -76,9 +73,36 @@ async function run() {
             const result = await allAssignmentCollection.findOne(query);
             res.send(result)
         })
-
+        // DELETE A ASSIGNMENT ONLY CREATOR CAN DELETE IT 
+        // UPDATE DATA LINK: http://localhost:5000/newAssignment/:id
+        app.delete("/newAssignment/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await allAssignmentCollection.deleteOne(query);
+            res.send(result)
+        })
         // UPDATE A ASSIGNMENT ONLY CREATOR CAN UPDATE IT 
         // UPDATE DATA LINK: http://localhost:5000/newAssignment/:id
+        app.patch('/newAssignment/:id', async (req, res) => {
+            const id = req.params.id;
+            const newProduct = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+            // Specify the update to set a value for the plot field
+            const updateDoc = {
+                $set: {
+                    assignmentTitle:newProduct.assignmentTitle,
+                    description:newProduct.description,
+                    imageURL:newProduct.imageURL,
+                    marks:newProduct.marks,
+                    difficulty:newProduct.difficulty,
+                    lastDateOfSubmition:newProduct.lastDateOfSubmition,
+                },
+            };
+            const result = await allAssignmentCollection.updateOne(filter, updateDoc, options);
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
