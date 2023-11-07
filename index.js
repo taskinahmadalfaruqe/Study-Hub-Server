@@ -41,6 +41,9 @@ async function run() {
         const allAssignmentCollection = client.db("studyHub").collection("assignment")
         const submitedAssignmentCollection = client.db("studyHub").collection("submitedAssignment")
 
+
+        // ALL ASSIGNMENT COLLECTION START 
+
         // POST ALL DATA IN DATABASE 
         // POST A NEW ASSIGNMENT LINK : http://localhost:5000/newAssignment 
         app.post('/newAssignment', async (req, res) => {
@@ -105,13 +108,32 @@ async function run() {
             res.send(result)
         })
 
+
+
+        // SUBMITED ASSIGNMENT COLLECTION START 
+
+        // POST A NEW SUBMIT ASSIGNMENT 
+        // POST DATA LINK: http://localhost:5000/submitedAssignment
+        app.post("/submitedAssignment", async(req,res)=>{
+            try {
+                const newSubmit = req.body;
+                console.log(newSubmit)
+                const result = await submitedAssignmentCollection.insertOne(newSubmit)
+                res.send(result)
+            } catch (error) {
+                res.send(error.message);
+            }
+        })
+
+
         // GET SUBMIT ASSIGNMENT COLLECTION 
-        // UPDATE DATA LINK: http://localhost:5000/submitAssingment?assignmentCreatorEmail=singleuser
+        // UPDATE DATA LINK: http://localhost:5000/submitedAssignment?user=singleuser
         app.get('/submitedAssignment', async(req,res)=>{
             const quaryOBJ={};
             const userQuery= req.query.user;
+            console.log("user", userQuery)
             if(userQuery){
-                const obj = quaryOBJ.assignmentCreatorEmail = userQuery
+                const obj = quaryOBJ.submitBy = userQuery
             }
             const find= submitedAssignmentCollection.find(quaryOBJ);
             const result=await find.toArray();
