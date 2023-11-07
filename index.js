@@ -37,6 +37,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
+
         // DATA BASE COLLECTION
         const allAssignmentCollection = client.db("studyHub").collection("assignment")
         const submitedAssignmentCollection = client.db("studyHub").collection("submitedAssignment")
@@ -114,6 +115,8 @@ async function run() {
 
         // POST A NEW SUBMIT ASSIGNMENT 
         // POST DATA LINK: http://localhost:5000/submitedAssignment
+        // POST DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment
+
         app.post("/submitedAssignment", async(req,res)=>{
             try {
                 const newSubmit = req.body;
@@ -124,16 +127,27 @@ async function run() {
                 res.send(error.message);
             }
         })
-
-
         // GET SUBMIT ASSIGNMENT COLLECTION 
         // UPDATE DATA LINK: http://localhost:5000/submitedAssignment?user=singleuser
+        // UPDATE DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment?status=pending
         app.get('/submitedAssignment', async(req,res)=>{
             const quaryOBJ={};
             const userQuery= req.query.user;
-            console.log("user", userQuery)
             if(userQuery){
                 const obj = quaryOBJ.submitBy = userQuery
+            }
+            const find= submitedAssignmentCollection.find(quaryOBJ);
+            const result=await find.toArray();
+            res.send(result)
+        })
+
+        // GET A LINK BY STATUS: http://localhost:5000/submitedAssignment/status?status=pending
+        // UPDATE DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment?status=pending
+        app.get('/submitedAssignment/status', async(req,res)=>{
+            const quaryOBJ={};
+            const statusQuery= req.query.status;
+            if(statusQuery){
+                quaryOBJ.status = statusQuery
             }
             const find= submitedAssignmentCollection.find(quaryOBJ);
             const result=await find.toArray();
