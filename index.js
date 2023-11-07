@@ -39,6 +39,7 @@ async function run() {
     try {
         // DATA BASE COLLECTION
         const allAssignmentCollection = client.db("studyHub").collection("assignment")
+        const submitedAssignmentCollection = client.db("studyHub").collection("submitedAssignment")
 
         // POST ALL DATA IN DATABASE 
         // POST A NEW ASSIGNMENT LINK : http://localhost:5000/newAssignment 
@@ -101,6 +102,19 @@ async function run() {
                 },
             };
             const result = await allAssignmentCollection.updateOne(filter, updateDoc, options);
+            res.send(result)
+        })
+
+        // GET SUBMIT ASSIGNMENT COLLECTION 
+        // UPDATE DATA LINK: http://localhost:5000/submitAssingment?assignmentCreatorEmail=singleuser
+        app.get('/submitedAssignment', async(req,res)=>{
+            const quaryOBJ={};
+            const userQuery= req.query.user;
+            if(userQuery){
+                const obj = quaryOBJ.assignmentCreatorEmail = userQuery
+            }
+            const find= submitedAssignmentCollection.find(quaryOBJ);
+            const result=await find.toArray();
             res.send(result)
         })
 
