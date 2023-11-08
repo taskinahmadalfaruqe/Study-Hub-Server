@@ -60,6 +60,7 @@ async function run() {
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment 
         // GET ALL ASSIGNMENT BY DIFFICULTY LEVEL  IN DATABASE
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment?diffeculty= easy/medium/hard
+        // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment?page=1&limit=6
         app.get('/newAssignment', async (req, res) => {
             const quaryOBJ = {}
             const queryPeremeter = req.query.difficulty;
@@ -86,6 +87,7 @@ async function run() {
             const result = await allAssignmentCollection.deleteOne(query);
             res.send(result)
         })
+
         // UPDATE A ASSIGNMENT ONLY CREATOR CAN UPDATE IT 
         // UPDATE DATA LINK: http://localhost:5000/newAssignment/:id
         app.patch('/newAssignment/:id', async (req, res) => {
@@ -109,13 +111,25 @@ async function run() {
             res.send(result)
         })
 
+        //PAGINATION
+        // UPDATE DATA LINK: http://localhost:5000/pagination?page=1&limit=6
+        app.get("/pagination", async (req, res) => {
+            const reqPage = parseInt(req.query.page);
+            const reqLimit = parseInt(req.query.limit);
+            const skip = (reqPage - 1) * reqLimit
+            const skipData =  allAssignmentCollection.find().skip(skip).limit(reqLimit);
+            const result = await skipData.toArray();
+            const total = await allAssignmentCollection.countDocuments();
+            res.send({total,result})
+        })
+
+
 
         // SUBMITED ASSIGNMENT COLLECTION START 
 
         // POST A NEW SUBMIT ASSIGNMENT 
         // POST DATA LINK: http://localhost:5000/submitedAssignment
         // POST DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment
-
         app.post("/submitedAssignment", async (req, res) => {
             try {
                 const newSubmit = req.body;
@@ -153,8 +167,8 @@ async function run() {
             res.send(result)
         })
 
-        // GET A ASSIGNMENT IN DATABASE
-        // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment/:id
+        // GET A SINGLE SUBMITION IN DATABASE
+        // GET A SINGEL DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment/:id
         app.get('/submitedAssignment/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -162,6 +176,8 @@ async function run() {
             res.send(result)
         })
 
+        // UPDATE SUBMITION DATA 
+        // GET A SINGEL DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment/:id
         app.patch('/submitedAssignment/:id', async (req, res) => {
             const id = req.params.id;
             const newdata = req.body;
@@ -171,15 +187,15 @@ async function run() {
             // Specify the update to set a value for the plot field
             const updateDoc = {
                 $set: {
-                    examinerName:newdata.examinerName ,
-                    giveMark:newdata.giveMark ,
-                    feedback:newdata.feedback ,
-                    assignmentTitle:newdata.assignmentTitle ,
-                    marks:newdata.marks ,
-                    note:newdata.note  ,
-                    projectFile:newdata.projectFile ,
-                    submitBy:newdata.submitBy ,
-                    submitDate:newdata.submitDate ,
+                    examinerName: newdata.examinerName,
+                    giveMark: newdata.giveMark,
+                    feedback: newdata.feedback,
+                    assignmentTitle: newdata.assignmentTitle,
+                    marks: newdata.marks,
+                    note: newdata.note,
+                    projectFile: newdata.projectFile,
+                    submitBy: newdata.submitBy,
+                    submitDate: newdata.submitDate,
                     status: 'conform',
                 },
             };
