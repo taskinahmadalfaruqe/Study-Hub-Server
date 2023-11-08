@@ -1,5 +1,5 @@
 // ALL REQUIR PART
-const express = require('express')
+const express = require('express');
 const cors = require("cors");
 const jwt = require('jsonwebtoken');
 const cooke = require('cookie-parser');
@@ -97,18 +97,17 @@ async function run() {
             // Specify the update to set a value for the plot field
             const updateDoc = {
                 $set: {
-                    assignmentTitle:newProduct.assignmentTitle,
-                    description:newProduct.description,
-                    imageURL:newProduct.imageURL,
-                    marks:newProduct.marks,
-                    difficulty:newProduct.difficulty,
-                    lastDateOfSubmition:newProduct.lastDateOfSubmition,
+                    assignmentTitle: newProduct.assignmentTitle,
+                    description: newProduct.description,
+                    imageURL: newProduct.imageURL,
+                    marks: newProduct.marks,
+                    difficulty: newProduct.difficulty,
+                    lastDateOfSubmition: newProduct.lastDateOfSubmition,
                 },
             };
             const result = await allAssignmentCollection.updateOne(filter, updateDoc, options);
             res.send(result)
         })
-
 
 
         // SUBMITED ASSIGNMENT COLLECTION START 
@@ -117,7 +116,7 @@ async function run() {
         // POST DATA LINK: http://localhost:5000/submitedAssignment
         // POST DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment
 
-        app.post("/submitedAssignment", async(req,res)=>{
+        app.post("/submitedAssignment", async (req, res) => {
             try {
                 const newSubmit = req.body;
                 console.log(newSubmit)
@@ -130,27 +129,61 @@ async function run() {
         // GET SUBMIT ASSIGNMENT COLLECTION 
         // UPDATE DATA LINK: http://localhost:5000/submitedAssignment?user=singleuser
         // UPDATE DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment?status=pending
-        app.get('/submitedAssignment', async(req,res)=>{
-            const quaryOBJ={};
-            const userQuery= req.query.user;
-            if(userQuery){
+        app.get('/submitedAssignment', async (req, res) => {
+            const quaryOBJ = {};
+            const userQuery = req.query.user;
+            if (userQuery) {
                 const obj = quaryOBJ.submitBy = userQuery
             }
-            const find= submitedAssignmentCollection.find(quaryOBJ);
-            const result=await find.toArray();
+            const find = submitedAssignmentCollection.find(quaryOBJ);
+            const result = await find.toArray();
             res.send(result)
         })
 
         // GET A LINK BY STATUS: http://localhost:5000/submitedAssignment/status?status=pending
         // UPDATE DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment?status=pending
-        app.get('/submitedAssignment/status', async(req,res)=>{
-            const quaryOBJ={};
-            const statusQuery= req.query.status;
-            if(statusQuery){
+        app.get('/submitedAssignment/status', async (req, res) => {
+            const quaryOBJ = {};
+            const statusQuery = req.query.status;
+            if (statusQuery) {
                 quaryOBJ.status = statusQuery
             }
-            const find= submitedAssignmentCollection.find(quaryOBJ);
-            const result=await find.toArray();
+            const find = submitedAssignmentCollection.find(quaryOBJ);
+            const result = await find.toArray();
+            res.send(result)
+        })
+
+        // GET A ASSIGNMENT IN DATABASE
+        // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment/:id
+        app.get('/submitedAssignment/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await submitedAssignmentCollection.findOne(query);
+            res.send(result)
+        })
+
+        app.patch('/submitedAssignment/:id', async (req, res) => {
+            const id = req.params.id;
+            const newdata = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+            // Specify the update to set a value for the plot field
+            const updateDoc = {
+                $set: {
+                    examinerName:newdata.examinerName ,
+                    giveMark:newdata.giveMark ,
+                    feedback:newdata.feedback ,
+                    assignmentTitle:newdata.assignmentTitle ,
+                    marks:newdata.marks ,
+                    note:newdata.note  ,
+                    projectFile:newdata.projectFile ,
+                    submitBy:newdata.submitBy ,
+                    submitDate:newdata.submitDate ,
+                    status: 'conform',
+                },
+            };
+            const result = await submitedAssignmentCollection.updateOne(filter, updateDoc, options);
             res.send(result)
         })
 
