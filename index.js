@@ -2,7 +2,7 @@
 const express = require('express');
 const cors = require("cors");
 const jwt = require('jsonwebtoken');
-const cooke = require('cookie-parser');
+const cookieParser = require('cookie-parser');
 require("dotenv").config();
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -11,7 +11,7 @@ const port = process.env.PORT || 5000;
 
 //CORS CONFIG FILE
 const corsConfig = {
-    origin: '*',
+    origin: ['http://localhost:5173'],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 };
@@ -20,7 +20,11 @@ const corsConfig = {
 // MIDILEWARE 
 app.use(express.json());
 app.use(cors(corsConfig));
-app.use(cooke());
+app.use(cookieParser());
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+}));
 
 
 // CURD OPERATION PART & CONNECT WITH MONGODB
@@ -42,15 +46,29 @@ async function run() {
         const allAssignmentCollection = client.db("studyHub").collection("assignment")
         const submitedAssignmentCollection = client.db("studyHub").collection("submitedAssignment")
 
+        const getman = (req, res, next) => {
+            const accessToken = req.cookies;
+            if (!accessToken) {
+                return res.send({ message: "You Are Unauthorize no token Given" })
+            }
+            jwt.verify(accessToken, process.env.DB_ACCESS_SECRET, function (err, decoded) {
+                if (err) {
+                    return res.send({ message: "You Are Unauthorize From err" })
+                }
+                console.log(decoded)
+                next();
+            });
+        };
 
-        app.post('/jwt', async(req,res)=>{
-            const user=req.body;
-            const token = jwt.sign(user,process.env.DB_ACCESS_SECRET,{expiresIn:"1h"})
-            res.send(token)
-        })
-
-
-
+        app.post('/access-token', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.DB_ACCESS_SECRET, { expiresIn: '1h' });
+            res.cookie('accessToken', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'None',
+            }).send({ success: true });
+        });
 
         // ALL ASSIGNMENT COLLECTION START 
 
@@ -73,21 +91,21 @@ async function run() {
         app.get('/newAssignment', async (req, res) => {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 6;
-            const difficulty = req.query.difficulty; 
-          
+            const difficulty = req.query.difficulty;
+
             const skip = (page - 1) * limit;
 
             const query = difficulty ? allAssignmentCollection.find({ difficulty }) : allAssignmentCollection.find({});
-          
+
             const total = await query.count();
             const assignments = await query.skip(skip).limit(limit).toArray();
             res.send({
-              assignments,
-              total,
+                assignments,
+                total,
             });
-          });
+        });
 
-          
+
         // GET A ASSIGNMENT IN DATABASE
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment/:id
         app.get('/newAssignment/:id', async (req, res) => {
@@ -128,6 +146,7 @@ async function run() {
             res.send(result)
         })
 
+
         // SUBMITED ASSIGNMENT COLLECTION START 
 
         // POST A NEW SUBMIT ASSIGNMENT 
@@ -136,7 +155,6 @@ async function run() {
         app.post("/submitedAssignment", async (req, res) => {
             try {
                 const newSubmit = req.body;
-                console.log(newSubmit)
                 const result = await submitedAssignmentCollection.insertOne(newSubmit)
                 res.send(result)
             } catch (error) {
@@ -149,6 +167,8 @@ async function run() {
         app.get('/submitedAssignment', async (req, res) => {
             const quaryOBJ = {};
             const userQuery = req.query.user;
+            console.log("hellooasdfdhj", req.cookies.accessToken)
+
             if (userQuery) {
                 const obj = quaryOBJ.submitBy = userQuery
             }
@@ -181,7 +201,7 @@ async function run() {
 
         // UPDATE SUBMITION DATA 
         // GET A SINGEL DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment/:id
-        app.patch('/submitedAssignment/:id', async (req, res) => {
+        app.patch('/submitedAssignment/:id', getman, async (req, res) => {
             const id = req.params.id;
             const newdata = req.body;
             const filter = { _id: new ObjectId(id) };
