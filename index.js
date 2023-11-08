@@ -61,16 +61,24 @@ async function run() {
         // GET ALL ASSIGNMENT BY DIFFICULTY LEVEL  IN DATABASE
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment?diffeculty= easy/medium/hard
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment?page=1&limit=6
-        app.get('/newAssignment', async (req, res) => {
-            const quaryOBJ = {}
-            const queryPeremeter = req.query.difficulty;
-            if (queryPeremeter) {
-                quaryOBJ.difficulty = queryPeremeter
-            }
-            const findAllAssignment = allAssignmentCollection.find(quaryOBJ);
-            const allAssignmentArray = await findAllAssignment.toArray();
-            res.send(allAssignmentArray)
-        })
+        app.get('/assignments', async (req, res) => {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 6;
+            const difficulty = req.query.difficulty; 
+          
+            const skip = (page - 1) * limit;
+
+            const query = difficulty ? allAssignmentCollection.find({ difficulty }) : allAssignmentCollection.find({});
+          
+            const total = await query.count();
+            const assignments = await query.skip(skip).limit(limit).toArray();
+            res.send({
+              assignments,
+              total,
+            });
+          });
+
+          
         // GET A ASSIGNMENT IN DATABASE
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment/:id
         app.get('/newAssignment/:id', async (req, res) => {
@@ -110,20 +118,6 @@ async function run() {
             const result = await allAssignmentCollection.updateOne(filter, updateDoc, options);
             res.send(result)
         })
-
-        //PAGINATION
-        // UPDATE DATA LINK: http://localhost:5000/pagination?page=1&limit=6
-        app.get("/pagination", async (req, res) => {
-            const reqPage = parseInt(req.query.page);
-            const reqLimit = parseInt(req.query.limit);
-            const skip = (reqPage - 1) * reqLimit
-            const skipData =  allAssignmentCollection.find().skip(skip).limit(reqLimit);
-            const result = await skipData.toArray();
-            const total = await allAssignmentCollection.countDocuments();
-            res.send({total,result})
-        })
-
-
 
         // SUBMITED ASSIGNMENT COLLECTION START 
 
