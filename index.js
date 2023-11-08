@@ -43,6 +43,15 @@ async function run() {
         const submitedAssignmentCollection = client.db("studyHub").collection("submitedAssignment")
 
 
+        app.post('/jwt', async(req,res)=>{
+            const user=req.body;
+            const token = jwt.sign(user,process.env.DB_ACCESS_SECRET,{expiresIn:"1h"})
+            res.send(token)
+        })
+
+
+
+
         // ALL ASSIGNMENT COLLECTION START 
 
         // POST ALL DATA IN DATABASE 
@@ -61,7 +70,7 @@ async function run() {
         // GET ALL ASSIGNMENT BY DIFFICULTY LEVEL  IN DATABASE
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment?diffeculty= easy/medium/hard
         // FIND ALL ASSIGNMENT LINK: http://localhost:5000/newAssignment?page=1&limit=6
-        app.get('/assignments', async (req, res) => {
+        app.get('/newAssignment', async (req, res) => {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 6;
             const difficulty = req.query.difficulty; 
