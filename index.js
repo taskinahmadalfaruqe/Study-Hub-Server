@@ -11,7 +11,11 @@ const port = process.env.PORT || 5000;
 
 //CORS CONFIG FILE
 const corsConfig = {
-    origin: ['http://localhost:5173'],
+    origin: [
+        'http://localhost:5173',
+        'https://breezy-recess.surge.sh',
+        'https://breezy-recess.surge.sh',
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 };
@@ -21,10 +25,6 @@ const corsConfig = {
 app.use(express.json());
 app.use(cors(corsConfig));
 app.use(cookieParser());
-app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true,
-}));
 
 
 // CURD OPERATION PART & CONNECT WITH MONGODB
@@ -47,15 +47,16 @@ async function run() {
         const submitedAssignmentCollection = client.db("studyHub").collection("submitedAssignment")
 
         const getman = (req, res, next) => {
-            const accessToken = req.cookies;
+            const accessToken = req.cookies.accessToken;
             if (!accessToken) {
-                return res.send({ message: "You Are Unauthorize no token Given" })
+                return res.status(401).send({ message: "Unauthorized: No Token Given" });
             }
-            jwt.verify(accessToken, process.env.DB_ACCESS_SECRET, function (err, decoded) {
+
+            jwt.verify(accessToken, process.env.DB_ACCESS_SECRET, (err, decoded) => {
                 if (err) {
-                    return res.send({ message: "You Are Unauthorize From err" })
+                    return res.status(401).send({ message: "Unauthorized: Token Verification Failed" });
                 }
-                console.log(decoded)
+                console.log(decoded);
                 next();
             });
         };
@@ -66,7 +67,7 @@ async function run() {
             res.cookie('accessToken', token, {
                 httpOnly: true,
                 secure: true,
-                sameSite: 'None',
+                sameSite: 'None'
             }).send({ success: true });
         });
 
@@ -201,7 +202,7 @@ async function run() {
 
         // UPDATE SUBMITION DATA 
         // GET A SINGEL DATA LINK: https://study-hub-bice.vercel.app/submitedAssignment/:id
-        app.patch('/submitedAssignment/:id', getman, async (req, res) => {
+        app.patch('/submitedAssignment/:id', async (req, res) => {
             const id = req.params.id;
             const newdata = req.body;
             const filter = { _id: new ObjectId(id) };
